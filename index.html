@@ -99,60 +99,40 @@
         inputField.value = '';
         appendRow(text, 'user');
         
+        // Sidebar active tracking update
         const li = document.createElement('li');
         li.className = 'history-item';
         li.innerText = text.length > 20 ? text.substring(0, 18) + "..." : text;
-        li.onclick = () => {
-            document.getElementById('userInput').value = text;
-            handleFormSubmit(new Event('submit'));
-        };
+        li.onclick = () => runSuggestion(text);
         document.getElementById('historyList').prepend(li);
 
-        chatHistory.push(text);
+        chatHistory.push({ role: "user", content: text });
         const loadRow = appendLoadingRow();
 
         try {
-            // Secure unrestricted client proxy engine (Allows any universal question seamlessly)
-            const promptContext = "You are a highly advanced website AI assistant called SwiftAI. Respond accurately and intelligently to the user. User question: " + text;
-            const res = await fetch('https://huggingface.co', {
+            // Live unrestricted browser CORS engine (Connects completely unauthenticated)
+            const res = await fetch('https://pollinations.ai', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ inputs: promptContext })
+                body: JSON.stringify({ 
+                    messages: chatHistory,
+                    model: 'openai'
+                })
             });
             
-            const data = await res.json();
+            const aiReply = await res.text();
             loadRow.remove();
 
-            if (data && data[0] && data[0].generated_text) {
-                let aiReply = data[0].generated_text.replace(promptContext, "").trim();
-                if(!aiReply) aiReply = "System synchronized! Type your custom question again now.";
-                appendRow(aiReply, 'ai');
+            if (aiReply) {
+                appendRow(aiReply.trim(), 'ai');
+                chatHistory.push({ role: "assistant", content: aiReply.trim() });
             } else {
-                executeFallbackText(text);
+                appendRow("Data synchronization delay. Please resend prompt.", "ai");
             }
         } catch (err) {
             loadRow.remove();
-            executeFallbackText(text);
+            appendRow("⚠️ Network congestion block. Check internet connectivity.", "ai");
         }
-    }
-
-    function executeFallbackText(text) {
-        // Universal instant layer ensuring 100% active reply loop on all prompts
-        let backupAnswer = "I am processing your query stream. Please ask any general or technical question!";
-        const norm = text.toLowerCase();
-        
-        if (norm.includes("computer")) {
-            backupAnswer = "The full form of COMPUTER is Commonly Operated Machine Particularly Used for Technical and Educational Research. It functions as a digital processor terminal.";
-        } else if (norm.includes("joke")) {
-            backupAnswer = "Why did the computer catch a cold? Because it left its Windows wide open! 💻😂";
-        } else if (norm.includes("hello") || norm.includes("hi")) {
-            backupAnswer = "Hello! Welcome to SwiftAI. Your global layout interface is now 100% open and unblocked. What engineering task are we running today?";
-        } else if (norm.includes("why")) {
-            backupAnswer = "Everything operates based on distinct cause, logical data loops, and strategic alignment parameters!";
-        } else {
-            backupAnswer = "Processed prompt request: '" + text + "'. I am standing by live on the server. Ask me another calculation question!";
-        }
-        appendRow(backupAnswer, 'ai');
     }
 
     function appendRow(text, sender) {
@@ -170,7 +150,7 @@
         const container = document.getElementById('chatContainer');
         const row = document.createElement('div');
         row.className = 'message-row';
-        row.innerHTML = `<div class="avatar ai">S</div><div class="message-content">SwiftAI is writing...</div>`;
+        row.innerHTML = `<div class="avatar ai">S</div><div class="message-content">SwiftAI is typing...</div>`;
         container.appendChild(row);
         container.scrollTop = container.scrollHeight;
         return row;
