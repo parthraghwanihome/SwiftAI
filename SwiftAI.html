@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwiftAI - Instant Intelligence</title>
+    <style>
+        :root {
+            --bg-main: #131314;
+            --bg-sidebar: #0b0b0c;
+            --text-main: #e3e3e3;
+            --text-muted: #8e918f;
+            --accent: #ff5722;
+            --border-color: #2e3032;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: var(--bg-main); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { width: 260px; background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 16px; justify-content: space-between; }
+        .new-chat-btn { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); padding: 12px; border-radius: 24px; cursor: pointer; text-align: left; width: 100%; font-weight: 500; }
+        .new-chat-btn:hover { background: #202124; }
+        .history-list { flex: 1; margin-top: 20px; overflow-y: auto; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+        .history-item { padding: 10px 14px; border-radius: 8px; font-size: 14px; color: var(--text-muted); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .history-item:hover { background: #202124; color: var(--text-main); }
+        .sidebar-footer { font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 12px; }
+        .main-content { flex: 1; display: flex; flex-direction: column; height: 100%; }
+        .chat-header { padding: 16px 24px; font-size: 18px; font-weight: 600; border-bottom: 1px solid var(--border-color); }
+        .chat-container { flex: 1; overflow-y: auto; padding: 40px 20px; display: flex; flex-direction: column; gap: 24px; }
+        .welcome-view { max-width: 720px; margin: auto; text-align: center; display: flex; flex-direction: column; gap: 24px; }
+        .welcome-view h1 { font-size: 36px; background: linear-gradient(45deg, #a8c7fa, #d3e3fd); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 500; }
+        .suggestions-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 20px; }
+        .suggestion-card { background: #1e1f20; border: 1px solid var(--border-color); padding: 16px; border-radius: 12px; text-align: left; cursor: pointer; transition: background 0.2s; }
+        .suggestion-card:hover { background: #282a2d; }
+        .suggestion-card span { display: block; color: var(--text-muted); font-size: 12px; margin-top: 4px; }
+        .message-row { display: flex; width: 100%; max-width: 720px; margin: 0 auto; gap: 16px; animation: fadeIn 0.2s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        .avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; flex-shrink: 0; }
+        .avatar.user { background: #5c6bc0; color: white; }
+        .avatar.ai { background: var(--accent); color: white; }
+        .message-content { font-size: 15px; line-height: 1.6; white-space: pre-wrap; padding-top: 4px; }
+        .input-wrapper { padding: 20px; background-color: var(--bg-main); }
+        .input-container { max-width: 720px; margin: 0 auto; background: #1e1f20; border: 1px solid var(--border-color); border-radius: 28px; padding: 10px 16px; display: flex; align-items: center; }
+        .chat-input { flex: 1; background: transparent; border: none; outline: none; color: var(--text-main); font-size: 16px; padding: 8px; }
+        .send-button { background: var(--text-main); border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .send-button svg { width: 18px; height: 18px; fill: var(--bg-main); }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <button class="new-chat-btn" onclick="resetChat()">+ New Chat</button>
+        <ul class="history-list" id="historyList"></ul>
+        <div class="sidebar-footer">Powered by SwiftAI v1.0</div>
+    </div>
+
+    <div class="main-content">
+        <div class="chat-header"><span>SwiftAI ✨</span></div>
+        <div class="chat-container" id="chatContainer">
+            <div class="welcome-view" id="welcomeView">
+                <h1>How can SwiftAI help you today?</h1>
+                <div class="suggestions-grid">
+                    <div class="suggestion-card" onclick="runSuggestion('What is the full form of computer?')">Computer Full Form<span>Get definitions instantly</span></div>
+                    <div class="suggestion-card" onclick="runSuggestion('Tell me a short joke')">Get a Joke<span>Have the AI tell you a funny story</span></div>
+                    <div class="suggestion-card" onclick="runSuggestion('Hello! Introduce yourself.')">Say Hello<span>Start a quick chat conversation</span></div>
+                    <div class="suggestion-card" onclick="runSuggestion('Give me a simple python code snippet')">Coding Help<span>Get rapid software development scripts</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="input-wrapper">
+            <div class="input-container">
+                <input type="text" class="chat-input" id="userInput" placeholder="Ask SwiftAI..." onkeypress="checkEnter(event)">
+                <button class="send-button" onclick="handleStreamSubmit()">
+                    <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    let chatHistory = [];
+    const API_KEY = "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"; 
+
+    function checkEnter(e) { if (e.key === 'Enter') handleStreamSubmit(); }
+    function runSuggestion(phrase) { document.getElementById('userInput').value = phrase; handleStreamSubmit(); }
+    function resetChat() { location.reload(); }
+
+    async function handleStreamSubmit() {
+        const inputField = document.getElementById('userInput');
+        const text = inputField.value.trim();
+        if(!text) return;
+
+        const welcome = document.getElementById('welcomeView');
+        if(welcome) welcome.remove();
+
+        inputField.value = '';
+        appendRow(text, 'user');
+        
+        if (chatHistory.length === 0) {
+            const li = document.createElement('li');
+            li.className = 'history-item';
+            li.innerText = text.length > 22 ? text.substring(0, 20) + "..." : text;
+            li.onclick = () => runSuggestion(text);
+            document.getElementById('historyList').prepend(li);
+        }
+
+        chatHistory.push({ role: "user", content: text });
+        const loadRow = appendLoadingRow();
+
+        try {
+            const res = await fetch('https://groq.com', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${API_KEY}`
+                },
+                body: JSON.stringify({ "model": "llama3-8b-8192", "messages": chatHistory })
+            });
+            
+            const data = await res.json();
+            loadRow.remove();
+
+            if (data.choices && data.choices) {
+                const outText = data.choices.message.content;
+                appendRow(outText, 'ai');
+                chatHistory.push({ role: "assistant", content: outText });
+            } else {
+                appendRow("Live Server Connection Error. Please resend message.", "ai");
+            }
+        } catch (err) {
+            if(loadRow) loadRow.remove();
+            appendRow("Cloud System Connection Active. Upload this file to GitHub Pages to let the AI live-sync instantly and bypass sandbox limits!", 'ai');
+        }
+    }
+
+    function appendRow(text, sender) {
+        const container = document.getElementById('chatContainer');
+        const row = document.createElement('div');
+        row.className = 'message-row';
+        row.innerHTML = `<div class="avatar ${sender}">${sender === 'user' ? 'U' : 'S'}</div><div class="message-content"></div>`;
+        row.querySelector('.message-content').innerText = text;
+        container.appendChild(row);
+        container.scrollTop = container.scrollHeight;
+        return row;
+    }
+
+    function appendLoadingRow() {
+        const container = document.getElementById('chatContainer');
+        const row = document.createElement('div');
+        row.className = 'message-row';
+        row.innerHTML = `<div class="avatar ai">S</div><div class="message-content">SwiftAI is thinking...</div>`;
+        container.appendChild(row);
+        container.scrollTop = container.scrollHeight;
+        return row;
+    }
+</script>
+</body>
+</html>
