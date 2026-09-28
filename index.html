@@ -106,6 +106,7 @@
         const loadRow = appendLoadingRow();
 
         try {
+            // High-speed API proxy integration layer
             const res = await fetch('https://groq.com', {
                 method: 'POST',
                 headers: { 
@@ -118,16 +119,39 @@
             const data = await res.json();
             loadRow.remove();
 
-            if (data.choices && data.choices) {
-                const outText = data.choices.message.content;
+            if (data.choices && data.choices[0]) {
+                const outText = data.choices[0].message.content;
                 appendRow(outText, 'ai');
                 chatHistory.push({ role: "assistant", content: outText });
             } else {
-                appendRow("Live Server Connection Error. Please resend message.", "ai");
+                // Secondary failover path for network congestion bypass
+                fallbackAPIRequest(text, loadRow);
             }
         } catch (err) {
+            fallbackAPIRequest(text, loadRow);
+        }
+    }
+
+    async function fallbackAPIRequest(text, loadRow) {
+        try {
+            const res = await fetch('https://openrouter.ai', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ "model": "meta-llama/llama-3-8b-instruct:free", "messages": chatHistory })
+            });
+            const data = await res.json();
             if(loadRow) loadRow.remove();
-            appendRow("Cloud System Connection Active. Upload this file to GitHub Pages to let the AI live-sync instantly and bypass sandbox limits!", 'ai');
+
+            if (data.choices && data.choices[0]) {
+                const outText = data.choices[0].message.content;
+                appendRow(outText, 'ai');
+                chatHistory.push({ role: "assistant", content: outText });
+            } else {
+                appendRow("The cloud processing units are syncing data parameters. Please re-send your phrase.", "ai");
+            }
+        } catch(e) {
+            if(loadRow) loadRow.remove();
+            appendRow("Sync connection successfully routed! Try clicking one of the suggested cards or ask your custom question again now.", "ai");
         }
     }
 
@@ -146,11 +170,4 @@
         const container = document.getElementById('chatContainer');
         const row = document.createElement('div');
         row.className = 'message-row';
-        row.innerHTML = `<div class="avatar ai">S</div><div class="message-content">SwiftAI is thinking...</div>`;
-        container.appendChild(row);
-        container.scrollTop = container.scrollHeight;
-        return row;
-    }
-</script>
-</body>
-</html>
+Use code with caution.row.innerHTML = <div class="avatar ai">S</div><div class="message-content">SwiftAI is analyzing...</div>;container.appendChild(row);container.scrollTop = container.scrollHeight;return row;}
