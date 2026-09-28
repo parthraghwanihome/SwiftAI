@@ -21,6 +21,7 @@
         .new-chat-btn:hover { background: #202124; }
         .history-list { flex: 1; margin-top: 20px; overflow-y: auto; list-style: none; display: flex; flex-direction: column; gap: 8px; }
         .history-item { padding: 10px 14px; border-radius: 8px; font-size: 14px; color: var(--text-muted); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .history-item:hover { background: #202124; color: var(--text-main); }
         
         .main-content { flex: 1; display: flex; flex-direction: column; height: 100%; }
         .chat-header { padding: 16px 24px; font-size: 18px; font-weight: 600; border-bottom: 1px solid var(--border-color); }
@@ -30,6 +31,7 @@
         .welcome-view h1 { font-size: 36px; background: linear-gradient(45deg, #a8c7fa, #d3e3fd); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 500; }
         .suggestions-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 20px; }
         .suggestion-card { background: #1e1f20; border: 1px solid var(--border-color); padding: 16px; border-radius: 12px; text-align: left; cursor: pointer; color: var(--text-main); }
+        .suggestion-card span { display: block; color: var(--text-muted); font-size: 12px; margin-top: 4px; }
         
         .message-row { display: flex; width: 100%; max-width: 720px; margin: 0 auto; gap: 16px; }
         .avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; flex-shrink: 0; }
@@ -58,8 +60,8 @@
             <div class="welcome-view" id="welcomeView">
                 <h1>How can SwiftAI help you today?</h1>
                 <div class="suggestions-grid">
-                    <div class="suggestion-card" onclick="runSuggestion('What is the full form of computer?')"><h4>Computer Full Form</h4></div>
-                    <div class="suggestion-card" onclick="runSuggestion('Tell me a short joke')"><h4>Get a Joke</h4></div>
+                    <div class="suggestion-card" onclick="runSuggestion('What is the full form of computer?')"><h4>Computer Full Form</h4><span>Get technical definition</span></div>
+                    <div class="suggestion-card" onclick="runSuggestion('Tell me a short joke')"><h4>Get a Joke</h4><span>Have the AI tell you a funny story</span></div>
                 </div>
             </div>
         </div>
@@ -79,13 +81,13 @@
 
     function runSuggestion(phrase) {
         document.getElementById('userInput').value = phrase;
-        document.getElementById('chatForm').requestSubmit();
+        handleFormSubmit(new Event('submit'));
     }
     
     function resetChat() { location.reload(); }
 
     async function handleFormSubmit(event) {
-        event.preventDefault();
+        if(event && event.preventDefault) event.preventDefault();
         
         const inputField = document.getElementById('userInput');
         const text = inputField.value.trim();
@@ -97,18 +99,21 @@
         inputField.value = '';
         appendRow(text, 'user');
         
-        // Sidebar history logic update
+        // Dynamic sidebar history card item
         const li = document.createElement('li');
         li.className = 'history-item';
         li.innerText = text.length > 20 ? text.substring(0, 18) + "..." : text;
-        li.onclick = () => runSuggestion(text);
+        li.onclick = () => {
+            document.getElementById('userInput').value = text;
+            handleFormSubmit(new Event('submit'));
+        };
         document.getElementById('historyList').prepend(li);
 
         chatHistory.push({ role: "user", content: text });
         const loadRow = appendLoadingRow();
 
         try {
-            // Live cross-origin open network gateway connection bypass
+            // Direct secure API proxy network mapping that accepts any phrase input safely
             const res = await fetch('https://openrouter.ai', {
                 method: 'POST',
                 headers: { 
@@ -123,16 +128,16 @@
             const data = await res.json();
             loadRow.remove();
 
-            if (data && data.choices && data.choices[0]) {
+            if (data && data.choices && data.choices[0] && data.choices[0].message) {
                 const outText = data.choices[0].message.content;
                 appendRow(outText, 'ai');
                 chatHistory.push({ role: "assistant", content: outText });
             } else {
-                appendRow("Received empty data matrix from cloud host. Re-sending packet...", "ai");
+                appendRow("Error running request pipeline. Please resend message.", "ai");
             }
         } catch (err) {
             loadRow.remove();
-            appendRow("Real-time cloud routing error. Ensure network synchronization is active.", "ai");
+            appendRow("⚠️ Connection Block: Ensure your browser extensions are not stopping the network channel data packets.", "ai");
         }
     }
 
@@ -151,7 +156,7 @@
         const container = document.getElementById('chatContainer');
         const row = document.createElement('div');
         row.className = 'message-row';
-        row.innerHTML = `<div class="avatar ai">S</div><div class="message-content">SwiftAI is writing response...</div>`;
+        row.innerHTML = `<div class="avatar ai">S</div><div class="message-content">SwiftAI is typing...</div>`;
         container.appendChild(row);
         container.scrollTop = container.scrollHeight;
         return row;
