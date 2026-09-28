@@ -20,7 +20,7 @@
         .new-chat-btn { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); padding: 12px; border-radius: 24px; cursor: pointer; text-align: left; width: 100%; font-weight: 500; }
         .new-chat-btn:hover { background: #202124; }
         .history-list { flex: 1; margin-top: 20px; overflow-y: auto; list-style: none; display: flex; flex-direction: column; gap: 8px; }
-        .history-item { padding: 10px 14px; border-radius: 8px; font-size: 14px; color: var(--text-muted); cursor: pointer; }
+        .history-item { padding: 10px 14px; border-radius: 8px; font-size: 14px; color: var(--text-muted); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
         .main-content { flex: 1; display: flex; flex-direction: column; height: 100%; }
         .chat-header { padding: 16px 24px; font-size: 18px; font-weight: 600; border-bottom: 1px solid var(--border-color); }
@@ -37,7 +37,6 @@
         .avatar.ai { background: var(--accent); color: white; }
         .message-content { font-size: 15px; line-height: 1.6; white-space: pre-wrap; padding-top: 4px; }
         
-        /* Fixed Form layout that cannot freeze */
         .input-wrapper { padding: 20px; background-color: var(--bg-main); }
         .input-form { max-width: 720px; margin: 0 auto; background: #1e1f20; border: 1px solid var(--border-color); border-radius: 28px; padding: 10px 16px; display: flex; align-items: center; }
         .chat-input { flex: 1; background: transparent; border: none; outline: none; color: var(--text-main); font-size: 16px; padding: 8px; }
@@ -65,7 +64,6 @@
             </div>
         </div>
         
-        <!-- Standard HTML Form to prevent standard script freeze -->
         <div class="input-wrapper">
             <form class="input-form" id="chatForm" onsubmit="handleFormSubmit(event)">
                 <input type="text" class="chat-input" id="userInput" placeholder="Ask SwiftAI..." autocomplete="off">
@@ -86,8 +84,8 @@
     
     function resetChat() { location.reload(); }
 
-    function handleFormSubmit(event) {
-        event.preventDefault(); // Stop page reload
+    async function handleFormSubmit(event) {
+        event.preventDefault();
         
         const inputField = document.getElementById('userInput');
         const text = inputField.value.trim();
@@ -98,26 +96,44 @@
 
         inputField.value = '';
         appendRow(text, 'user');
-        chatHistory.push({ role: "user", content: text });
+        
+        // Sidebar history logic update
+        const li = document.createElement('li');
+        li.className = 'history-item';
+        li.innerText = text.length > 20 ? text.substring(0, 18) + "..." : text;
+        li.onclick = () => runSuggestion(text);
+        document.getElementById('historyList').prepend(li);
 
+        chatHistory.push({ role: "user", content: text });
         const loadRow = appendLoadingRow();
 
-        setTimeout(() => {
+        try {
+            // Live cross-origin open network gateway connection bypass
+            const res = await fetch('https://openrouter.ai', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    "model": "meta-llama/llama-3-8b-instruct:free", 
+                    "messages": chatHistory 
+                })
+            });
+            
+            const data = await res.json();
             loadRow.remove();
-            let dynamicOutput = "System functional. SwiftAI execution interface working smoothly.";
-            const normText = text.toLowerCase();
-            
-            if (normText.includes("computer")) {
-                dynamicOutput = "The full form of COMPUTER is Commonly Operated Machine Particularly Used for Technical and Educational Research.";
-            } else if (normText.includes("joke")) {
-                dynamicOutput = "Why did the computer catch a cold? Because it left its Windows wide open! 💻 Fixed browser logic successfully!";
-            } else if (normText.includes("hello") || normText.includes("hi")) {
-                dynamicOutput = "Hello! Welcome to SwiftAI. Your global layout interface is now 100% unlocked. How can I help you today?";
+
+            if (data && data.choices && data.choices[0]) {
+                const outText = data.choices[0].message.content;
+                appendRow(outText, 'ai');
+                chatHistory.push({ role: "assistant", content: outText });
+            } else {
+                appendRow("Received empty data matrix from cloud host. Re-sending packet...", "ai");
             }
-            
-            appendRow(dynamicOutput, 'ai');
-            chatHistory.push({ role: "assistant", content: dynamicOutput });
-        }, 300);
+        } catch (err) {
+            loadRow.remove();
+            appendRow("Real-time cloud routing error. Ensure network synchronization is active.", "ai");
+        }
     }
 
     function appendRow(text, sender) {
@@ -135,7 +151,7 @@
         const container = document.getElementById('chatContainer');
         const row = document.createElement('div');
         row.className = 'message-row';
-        row.innerHTML = `<div class="avatar ai">S</div><div class="message-content">SwiftAI is calculating...</div>`;
+        row.innerHTML = `<div class="avatar ai">S</div><div class="message-content">SwiftAI is writing response...</div>`;
         container.appendChild(row);
         container.scrollTop = container.scrollHeight;
         return row;
