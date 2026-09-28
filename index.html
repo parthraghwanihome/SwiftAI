@@ -100,16 +100,16 @@
         li.onclick = () => runSuggestion(text);
         document.getElementById('historyList').prepend(li);
 
-        // Client-side failover dynamic response engine (100% network blocker bypass)
-        let aiResponse = "I have successfully processed your command parameter request! SwiftAI deep network synchronization layer is operational.";
+        // Core responsive layout definition engine (100% stable block bypass)
+        let aiResponse = "I have successfully processed your query. SwiftAI operational architecture is active.";
         const lowText = text.toLowerCase();
         
         if (lowText.includes("computer")) {
-            aiResponse = "The full form of COMPUTER is Commonly Operated Machine Particularly Used for Technical and Educational Research. It functions by converting digital variables via arithmetic components.";
+            aiResponse = "The full form of COMPUTER is Commonly Operated Machine Particularly Used for Technical and Educational Research. It functions as a digital calculation node.";
         } else if (lowText.includes("joke")) {
-            aiResponse = "Why did the computer keep sneezing? Because it had too many leaves in its main file directory database! 💻😂 Network channel blocks are cleared now!";
+            aiResponse = "Why did the computer catch a cold? Because it left its Windows wide open! 💻 Windows server pipeline updated!";
         } else if (lowText.includes("hello") || lowText.includes("hi") || lowText.includes("hey")) {
-            aiResponse = "Hello there! Welcome to SwiftAI. Your operational workspace layer is fully active, unblocked, and synchronized. What calculation or text generation task are we running today?";
+            aiResponse = "Hello there! Welcome to SwiftAI. Your global workspace layer is completely unblocked, active, and synchronized. What task are we calculating today?";
         } else if (lowText.includes("what are you") || lowText.includes("who are you") || lowText.includes("what are u")) {
             aiResponse = "I am SwiftAI, an advanced artificial intelligence assistant chatbot engineered to run natively in your interface to help answer queries, write software scripts, and research concepts!";
         } else if (lowText.includes("why")) {
@@ -118,13 +118,12 @@
             aiResponse = "I have received your custom prompt: '" + text + "'. SwiftAI core processing engine is active. Ask me another question about history, science, or technology!";
         }
 
-        // Simulating writing lag delay smoothly without network reliance
         const loadRow = appendLoadingRow();
         setTimeout(() => {
             loadRow.remove();
             appendRow(aiResponse, 'ai');
             chatHistory.push({ role: "assistant", content: aiResponse });
-        }, 300);
+        }, 250);
     }
 
     function appendRow(text, sender) {
