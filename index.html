@@ -19,7 +19,7 @@
         .new-chat-btn { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); padding: 12px; border-radius: 24px; cursor: pointer; text-align: left; width: 100%; font-weight: 500; }
         .new-chat-btn:hover { background: #202124; }
         .history-list { flex: 1; margin-top: 20px; overflow-y: auto; list-style: none; display: flex; flex-direction: column; gap: 8px; }
-        .history-item { padding: 10px 14px; border-radius: 8px; font-size: 14px; color: var(--text-muted); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .history-item { padding: 10px 14px; border-radius: 8px; font-size: 14px; color: var(--text-muted); cursor: pointer; }
         .history-item:hover { background: #202124; color: var(--text-main); }
         .sidebar-footer { font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 12px; }
         .main-content { flex: 1; display: flex; flex-direction: column; height: 100%; }
@@ -98,7 +98,6 @@
             const li = document.createElement('li');
             li.className = 'history-item';
             li.innerText = text.length > 22 ? text.substring(0, 20) + "..." : text;
-            li.onclick = () => runSuggestion(text);
             document.getElementById('historyList').prepend(li);
         }
 
@@ -112,10 +111,7 @@
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${API_KEY}`
                 },
-                body: JSON.stringify({ 
-                    "model": "llama3-8b-8192", 
-                    "messages": chatHistory 
-                })
+                body: JSON.stringify({ "model": "llama3-8b-8192", "messages": chatHistory })
             });
             
             const data = await response.json();
@@ -135,18 +131,17 @@
 
     function executeDynamicEngine(userPrompt, loadRow) {
         if(loadRow) loadRow.remove();
-        
-        let dynamicOutput = "System synchronized successfully. Type any topic or query to generate live content blocks!";
+        let dynamicOutput = "I am ready. Ask me any specialized query block!";
         const normText = userPrompt.toLowerCase();
         
         if (normText.includes("computer")) {
-            dynamicOutput = "The full form of COMPUTER is Commonly Operated Machine Particularly Used for Technical and Educational Research. It functions by accepting digital inputs, processing operations using registers, and rendering clear outputs.";
+            dynamicOutput = "The full form of COMPUTER is Commonly Operated Machine Particularly Used for Technical and Educational Research. It accepts instructions, performs computation cycles, and outputs clean results.";
         } else if (normText.includes("joke")) {
-            dynamicOutput = "Why did the computer keep sneezing? Because it had too many unfiltered cookies in its main cache memory! 💻😂";
+            dynamicOutput = "Why did the computer keep sneezing? Because it had too many unfiltered cookies in its main directory cache! 💻😂";
         } else if (normText.includes("hello") || normText.includes("hi")) {
-            dynamicOutput = "Hello! Welcome to SwiftAI. Your global layout layer is completely active and unlocked. What engineering or writing task are we running today?";
+            dynamicOutput = "Hello! Welcome to SwiftAI. Your global live interface is successfully working. What task are we calculating today?";
         } else if (normText.includes("python") || normText.includes("code")) {
-            dynamicOutput = "Here is your clean Python logic script:\n\n# SwiftAI core processing data block\nfor count in range(1, 4):\n    print(f'AI Execution Iteration: {count}')";
+            dynamicOutput = "Here is your clean script syntax:\n\nfor i in range(1, 4):\n    print(f'AI Loop: {i}')";
         }
         
         appendRow(dynamicOutput, 'ai');
@@ -160,4 +155,12 @@
         row.innerHTML = `<div class="avatar ${sender}">${sender === 'user' ? 'U' : 'S'}</div><div class="message-content"></div>`;
         row.querySelector('.message-content').innerText = text;
         container.appendChild(row);
-Use code with caution.container.scrollTop = container.scrollHeight;return row;}function appendLoadingRow() {const container = document.getElementById('chatContainer');const row = document.createElement('div');row.className = 'message-row';row.innerHTML = <div class="avatar ai">S</div><div class="message-content">SwiftAI is processing data streams...</div>;container.appendChild(row);container.scrollTop = container.scrollHeight;return row;}
+        container.scrollTop = container.scrollHeight;
+        return row;
+    }
+
+    function appendLoadingRow() {
+        const container = document.getElementById('chatContainer');
+        const row = document.createElement('div');
+        row.className = 'message-row';
+Use code with caution.row.innerHTML = <div class="avatar ai">S</div><div class="message-content">SwiftAI is processing your query stream...</div>;container.appendChild(row);container.scrollTop = container.scrollHeight;return row;}
